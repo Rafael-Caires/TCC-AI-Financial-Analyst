@@ -1,31 +1,28 @@
 # Sistema Financeiro com Inteligência Artificial - TCC
 
 ## Autor: Rafael Lima Caires
-## Data: Junho 2025
-## Versão: 2.0 - Melhorias na Análise com IA
-
 ---
 
 ## 📋 Descrição do Projeto
 
-Este projeto implementa um sistema financeiro inteligente com funcionalidades avançadas de análise com IA, conforme especificado no TCC. O sistema utiliza técnicas de machine learning para previsão de preços, análise de sentimentos, análise de risco e geração de recomendações personalizadas.
+Este projeto implementa um sistema financeiro inteligente com funcionalidades avançadas de análise com IA. O sistema utiliza técnicas de machine learning para previsão de preços, análise de sentimentos(melhoria futura usar logica fuzzy), análise de risco e geração de recomendações personalizadas.
 
-## 🚀 Principais Melhorias Implementadas
+## 🚀 Implementações Inciais
 
-### 1. **Sistema de Análise com IA Aprimorado**
-- **Previsões LSTM Simplificadas**: Implementação de modelo de previsão baseado em redes neurais LSTM
+### 1. **Sistema de Análise com IA**
+- **Previsões LSTM Simplificadas**: Implementação bem simplificada de modelo de previsão baseado em redes neurais LSTM
 - **Análise de Sentimentos**: Sistema de análise de sentimentos de notícias e dados de mercado
 - **Análise Quantitativa de Risco**: Cálculo de métricas como VaR, CVaR, Sharpe Ratio, Maximum Drawdown
 - **Sistema de Recomendação Híbrido**: Recomendações personalizadas baseadas no perfil de risco do usuário
 
-### 2. **Indicadores Técnicos Avançados**
+### 2. **Indicadores Técnicos**
 - Médias Móveis (SMA 20, 50, 200)
 - RSI (Relative Strength Index)
 - MACD (Moving Average Convergence Divergence)
 - Bollinger Bands
 - Análise de volatilidade
 
-### 3. **Interface de Usuário Melhorada**
+### 3. **Interface de Usuário**
 - Dashboard interativo com análise completa
 - Seletor de ativos para análise
 - Visualização de previsões e métricas de risco
@@ -267,19 +264,10 @@ pip install optuna
 
 Este projeto foi desenvolvido como parte do TCC e demonstra a aplicação prática de técnicas de IA no mercado financeiro.
 
-### Principais Contribuições:
-1. **Sistema híbrido** combinando múltiplas técnicas de IA
-2. **Interface intuitiva** para análise financeira
-3. **Arquitetura escalável** e bem documentada
-4. **Implementação prática** de conceitos teóricos
-
 ## 📄 Licença
 
 Este projeto é parte de um trabalho acadêmico (TCC) e está disponível para fins educacionais.
 
----
 
-**Desenvolvido por Rafael Lima Caires - Junho 2025**
-
-*Sistema Financeiro com Inteligência Artificial - Versão 2.0*
+*Sistema Financeiro com Inteligência Artificial - Versão 1.0*
 
