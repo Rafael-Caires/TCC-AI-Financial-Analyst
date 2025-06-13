@@ -64,7 +64,7 @@ sistema_financeiro_ia_avancado/
 ├── backend/
 │   ├── src/
 │   │   ├── routes/
-│   │   │   ├── ai_analysis.py          # 🆕 Nova API de análise com IA
+│   │   │   ├── ai_analysis.py          # API de análise com IA
 │   │   │   ├── ai_routes.py            # APIs avançadas de IA
 │   │   │   ├── auth.py                 # Autenticação
 │   │   │   ├── stocks.py               # Dados de ações
@@ -80,18 +80,18 @@ sistema_financeiro_ia_avancado/
 │   │   ├── services/
 │   │   │   └── financial_data_service.py
 │   │   ├── utils/
-│   │   └── main.py                     # 🔄 Arquivo principal atualizado
+│   │   └── main.py                     
 │   ├── requirements.txt
-│   └── README.md
+│   
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── AIAnalysis.jsx          # 🆕 Componente de análise com IA
+│   │   │   ├── AIAnalysis.jsx          
 │   │   │   └── ...
 │   │   └── ...
 │   ├── package.json
-│   └── README.md
-└── README.md                           # 🆕 Este arquivo
+│   
+└── README.md                           
 ```
 
 ## 🔧 Instalação e Configuração
