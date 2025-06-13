@@ -137,7 +137,7 @@ sistema_financeiro_ia_avancado/
 
 3. **Execute o servidor de desenvolvimento:**
    ```bash
-   npm start
+   npm run dev
    ```
 
    A aplicação estará disponível em: `http://localhost:3000`
