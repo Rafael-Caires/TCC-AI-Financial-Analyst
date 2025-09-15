@@ -22,12 +22,12 @@ class RiskAnalyzer:
     Classe para análise quantitativa de risco de portfólios e ativos individuais.
     """
     
-    def __init__(self, risk_free_rate: float = 0.02):
+    def __init__(self, risk_free_rate: float = 0.1075):  # Taxa Selic atual
         """
         Inicializa o analisador de risco.
         
         Args:
-            risk_free_rate (float): Taxa livre de risco anual (padrão: 2%)
+            risk_free_rate (float): Taxa livre de risco anual (Selic: 10.75%)
         """
         self.risk_free_rate = risk_free_rate
         self.confidence_levels = [0.90, 0.95, 0.99]
@@ -672,4 +672,243 @@ RECOMENDAÇÕES:
             recommendations.append("- Portfólio apresenta perfil de risco adequado")
         
         return "\n".join(recommendations)
+    
+    def calculate_portfolio_metrics(self, portfolio_weights: Dict[str, float], 
+                                  returns_data: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Calcula métricas completas de risco para um portfólio.
+        
+        Args:
+            portfolio_weights: Pesos dos ativos no portfólio
+            returns_data: DataFrame com retornos históricos
+            
+        Returns:
+            Dict com todas as métricas de risco
+        """
+        try:
+            # Filtrar apenas ativos com dados disponíveis
+            available_tickers = [ticker for ticker in portfolio_weights.keys() 
+                               if ticker in returns_data.columns]
+            
+            if not available_tickers:
+                return self._empty_metrics()
+            
+            # Normalizar pesos para ativos disponíveis
+            total_weight = sum(portfolio_weights[ticker] for ticker in available_tickers)
+            if total_weight == 0:
+                return self._empty_metrics()
+                
+            normalized_weights = {ticker: portfolio_weights[ticker] / total_weight 
+                                for ticker in available_tickers}
+            
+            # Calcular retornos do portfólio
+            portfolio_returns = self._calculate_portfolio_returns(
+                normalized_weights, returns_data[available_tickers]
+            )
+            
+            if portfolio_returns.empty or len(portfolio_returns) < 30:
+                return self._empty_metrics()
+            
+            # Métricas básicas
+            daily_return = portfolio_returns.mean()
+            annualized_return = (1 + daily_return) ** 252 - 1
+            daily_volatility = portfolio_returns.std()
+            annualized_volatility = daily_volatility * np.sqrt(252)
+            
+            # Sharpe Ratio
+            sharpe_ratio = (annualized_return - self.risk_free_rate) / annualized_volatility if annualized_volatility != 0 else 0
+            
+            # Value at Risk e Conditional Value at Risk
+            var_metrics = {}
+            cvar_metrics = {}
+            
+            for confidence in self.confidence_levels:
+                var_daily = self.calculate_var(portfolio_returns, confidence)
+                var_annual = var_daily * np.sqrt(252)
+                cvar_daily = self.calculate_cvar(portfolio_returns, confidence)
+                cvar_annual = cvar_daily * np.sqrt(252)
+                
+                var_metrics[f'var_{int(confidence*100)}'] = {
+                    'daily': var_daily,
+                    'annual': var_annual
+                }
+                cvar_metrics[f'cvar_{int(confidence*100)}'] = {
+                    'daily': cvar_daily,
+                    'annual': cvar_annual
+                }
+            
+            # Maximum Drawdown
+            portfolio_prices = (1 + portfolio_returns).cumprod()
+            drawdown_analysis = self.calculate_maximum_drawdown(portfolio_prices)
+            
+            # Beta em relação ao IBOV (simulado)
+            market_returns = self._generate_market_returns(len(portfolio_returns))
+            beta_alpha = self.calculate_beta_alpha(portfolio_returns, market_returns)
+            
+            # Sortino Ratio
+            sortino_ratio = self.calculate_sortino_ratio(portfolio_returns)
+            
+            # Information Ratio
+            information_ratio = self.calculate_information_ratio(portfolio_returns, market_returns)
+            
+            # Tracking Error
+            tracking_error = self.calculate_tracking_error(portfolio_returns, market_returns)
+            
+            # Análise de concentração
+            weights_array = np.array(list(normalized_weights.values()))
+            concentration_analysis = self._analyze_concentration(weights_array, available_tickers)
+            
+            # Stress Test
+            stress_test_results = self._perform_stress_test(portfolio_returns)
+            
+            # Classificação de risco
+            risk_classification = self._classify_portfolio_risk_advanced({
+                'volatility': annualized_volatility,
+                'var_95': abs(var_metrics['var_95']['annual']),
+                'max_drawdown': abs(drawdown_analysis['max_drawdown']),
+                'beta': beta_alpha['beta']
+            })
+            
+            return {
+                # Retorno e volatilidade
+                'daily_return': daily_return,
+                'annualized_return': annualized_return,
+                'daily_volatility': daily_volatility,
+                'annualized_volatility': annualized_volatility,
+                
+                # Métricas de risco-retorno
+                'sharpe_ratio': sharpe_ratio,
+                'sortino_ratio': sortino_ratio,
+                'information_ratio': information_ratio,
+                
+                # VaR e CVaR
+                'var_metrics': var_metrics,
+                'cvar_metrics': cvar_metrics,
+                
+                # Drawdown
+                'drawdown_analysis': drawdown_analysis,
+                
+                # Risco sistemático
+                'beta': beta_alpha['beta'],
+                'alpha': beta_alpha['alpha'],
+                'r_squared': beta_alpha['r_squared'],
+                'tracking_error': tracking_error,
+                
+                # Concentração
+                'concentration_analysis': concentration_analysis,
+                
+                # Stress Test
+                'stress_test_results': stress_test_results,
+                
+                # Classificação
+                'risk_classification': risk_classification,
+                
+                # Metadados
+                'calculation_date': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'observation_period_days': len(portfolio_returns),
+                'risk_free_rate_used': self.risk_free_rate,
+                'available_tickers': available_tickers,
+                'portfolio_weights': normalized_weights
+            }
+            
+        except Exception as e:
+            print(f"Erro no cálculo de métricas: {e}")
+            return self._empty_metrics()
+    
+    def _calculate_portfolio_returns(self, weights: Dict[str, float], 
+                                   returns_data: pd.DataFrame) -> pd.Series:
+        """Calcula retornos do portfólio baseado nos pesos."""
+        portfolio_returns = pd.Series(0.0, index=returns_data.index)
+        
+        for ticker, weight in weights.items():
+            if ticker in returns_data.columns:
+                portfolio_returns += weight * returns_data[ticker]
+        
+        return portfolio_returns.dropna()
+    
+    def _generate_market_returns(self, n_periods: int) -> pd.Series:
+        """Gera retornos de mercado simulados para cálculo de beta."""
+        # Simula IBOV com parâmetros realistas
+        np.random.seed(42)  # Para reprodutibilidade
+        market_returns = np.random.normal(0.0005, 0.018, n_periods)  # ~13% anual, 18% vol
+        return pd.Series(market_returns)
+    
+    def _empty_metrics(self) -> Dict[str, Any]:
+        """Retorna métricas vazias para casos de erro."""
+        return {
+            'error': 'Dados insuficientes para análise de risco',
+            'daily_return': 0.0,
+            'annualized_return': 0.0,
+            'annualized_volatility': 0.0,
+            'sharpe_ratio': 0.0,
+            'risk_classification': 'Não Disponível'
+        }
+    
+    def _classify_portfolio_risk_advanced(self, metrics: Dict[str, float]) -> str:
+        """
+        Classifica o risco do portfólio em categorias.
+        
+        Args:
+            metrics: Métricas calculadas do portfólio
+            
+        Returns:
+            Classificação: 'Muito Baixo', 'Baixo', 'Moderado', 'Alto', 'Muito Alto'
+        """
+        volatility = metrics.get('volatility', 0.20)
+        var_95 = abs(metrics.get('var_95', 0.05))
+        max_drawdown = abs(metrics.get('max_drawdown', 0.10))
+        beta = abs(metrics.get('beta', 1.0))
+        
+        # Sistema de pontuação
+        risk_score = 0
+        
+        # Volatilidade
+        if volatility > 0.35:
+            risk_score += 4
+        elif volatility > 0.25:
+            risk_score += 3
+        elif volatility > 0.15:
+            risk_score += 2
+        elif volatility > 0.10:
+            risk_score += 1
+        
+        # VaR
+        if var_95 > 0.15:
+            risk_score += 4
+        elif var_95 > 0.10:
+            risk_score += 3
+        elif var_95 > 0.05:
+            risk_score += 2
+        elif var_95 > 0.03:
+            risk_score += 1
+        
+        # Maximum Drawdown
+        if max_drawdown > 0.40:
+            risk_score += 4
+        elif max_drawdown > 0.25:
+            risk_score += 3
+        elif max_drawdown > 0.15:
+            risk_score += 2
+        elif max_drawdown > 0.08:
+            risk_score += 1
+        
+        # Beta
+        if beta > 1.8:
+            risk_score += 3
+        elif beta > 1.4:
+            risk_score += 2
+        elif beta > 1.2:
+            risk_score += 1
+        
+        # Classificação final
+        if risk_score >= 12:
+            return 'Muito Alto'
+        elif risk_score >= 9:
+            return 'Alto'
+        elif risk_score >= 6:
+            return 'Moderado'
+        elif risk_score >= 3:
+            return 'Baixo'
+        else:
+            return 'Muito Baixo'
 

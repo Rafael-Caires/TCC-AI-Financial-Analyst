@@ -35,6 +35,7 @@ from src.routes.recommendations import recommendations_bp
 from src.routes.dashboard import dashboard_bp
 from src.routes.ai_routes import ai_bp
 from src.routes.ai_analysis import ai_analysis_bp
+from src.routes.portfolio import portfolio_bp
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -55,7 +56,13 @@ def create_app(test_config=None):
     )
     
     # Habilita CORS para permitir requisições do frontend
-    CORS(app)
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173", "http://127.0.0.1:3000"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
     
     # Registra os blueprints (rotas)
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -65,6 +72,7 @@ def create_app(test_config=None):
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(ai_bp)  # Rotas de IA avançadas
     app.register_blueprint(ai_analysis_bp)  # Nova análise com IA
+    app.register_blueprint(portfolio_bp)  # Rotas avançadas de portfólio
     
     # Rota de teste/status
     @app.route('/api/status')

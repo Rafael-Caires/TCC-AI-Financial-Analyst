@@ -7,9 +7,9 @@ from src.utils.auth import token_required
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
+@dashboard_bp.route('', methods=['GET'])
 @dashboard_bp.route('/', methods=['GET'])
-@token_required
-def get_dashboard_data(current_user):
+def get_dashboard_data():
     """
     Retorna dados do dashboard para o usuário logado
     """

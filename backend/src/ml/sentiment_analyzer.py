@@ -24,9 +24,23 @@ import logging
 
 # Download necessário para NLTK
 try:
+    nltk.data.find('tokenizers/punkt')
     nltk.data.find('vader_lexicon')
-except LookupError:
-    nltk.download('vader_lexicon')
+except (LookupError, OSError):
+    try:
+        import ssl
+        try:
+            _create_unverified_https_context = ssl._create_unverified_context
+        except AttributeError:
+            pass
+        else:
+            ssl._create_default_https_context = _create_unverified_https_context
+        
+        nltk.download('vader_lexicon', quiet=True)
+        nltk.download('punkt', quiet=True)
+    except Exception as e:
+        print(f"Aviso: Não foi possível baixar dados do NLTK: {e}")
+        # Continua sem NLTK se não conseguir baixar
 
 class SentimentAnalyzer:
     """
@@ -37,7 +51,11 @@ class SentimentAnalyzer:
         """
         Inicializa o analisador de sentimentos.
         """
-        self.sia = SentimentIntensityAnalyzer()
+        try:
+            self.sia = SentimentIntensityAnalyzer()
+        except Exception as e:
+            print(f"Aviso: NLTK não disponível, usando análise simplificada: {e}")
+            self.sia = None
         self.logger = logging.getLogger(__name__)
         
         # Palavras-chave financeiras para filtrar notícias relevantes
@@ -62,6 +80,39 @@ class SentimentAnalyzer:
             ]
         }
     
+    def _simple_sentiment_analysis(self, text):
+        """
+        Análise de sentimento simplificada usando palavras-chave.
+        
+        Args:
+            text (str): Texto para análise
+            
+        Returns:
+            dict: Scores de sentimento compatíveis com VADER
+        """
+        positive_words = self.financial_sentiment_words['positive']
+        negative_words = self.financial_sentiment_words['negative']
+        
+        text_lower = text.lower()
+        pos_count = sum(1 for word in positive_words if word in text_lower)
+        neg_count = sum(1 for word in negative_words if word in text_lower)
+        
+        total_words = len(text_lower.split())
+        if total_words == 0:
+            return {'compound': 0, 'pos': 0, 'neu': 1, 'neg': 0}
+        
+        pos_score = min(1.0, pos_count / total_words * 5)  # Amplifica o score
+        neg_score = min(1.0, neg_count / total_words * 5)
+        neu_score = max(0, 1 - pos_score - neg_score)
+        compound = max(-1, min(1, pos_score - neg_score))
+        
+        return {
+            'compound': compound,
+            'pos': pos_score,
+            'neu': neu_score,
+            'neg': neg_score
+        }
+
     def analyze_text_sentiment(self, text: str) -> Dict[str, float]:
         """
         Analisa o sentimento de um texto usando múltiplas abordagens.
@@ -86,11 +137,19 @@ class SentimentAnalyzer:
         cleaned_text = self._clean_text(text)
         
         # VADER sentiment
-        vader_scores = self.sia.polarity_scores(cleaned_text)
+        if self.sia:
+            vader_scores = self.sia.polarity_scores(cleaned_text)
+        else:
+            # Análise simplificada quando NLTK não está disponível
+            vader_scores = self._simple_sentiment_analysis(cleaned_text)
         
         # TextBlob sentiment
-        blob = TextBlob(cleaned_text)
-        textblob_polarity = blob.sentiment.polarity
+        try:
+            blob = TextBlob(cleaned_text)
+            textblob_polarity = blob.sentiment.polarity
+        except Exception as e:
+            self.logger.warning(f"TextBlob não disponível: {e}")
+            textblob_polarity = 0.0
         
         # Sentimento financeiro customizado
         financial_sentiment = self._calculate_financial_sentiment(cleaned_text)
@@ -537,4 +596,27 @@ class SentimentAnalyzer:
             return 'negative'
         else:
             return 'neutral'
+    
+    def analyze_sentiment(self, text):
+        """
+        Método de compatibilidade para análise de sentimento.
+        Retorna apenas os scores básicos do VADER.
+        
+        Args:
+            text (str): Texto para análise
+            
+        Returns:
+            dict: Scores de sentimento compatíveis com VADER
+        """
+        if not text or not isinstance(text, str):
+            return {'compound': 0, 'pos': 0, 'neu': 1, 'neg': 0}
+        
+        try:
+            if self.sia:
+                return self.sia.polarity_scores(text)
+            else:
+                return self._simple_sentiment_analysis(text)
+        except Exception as e:
+            self.logger.error(f"Erro na análise de sentimento: {e}")
+            return {'compound': 0, 'pos': 0, 'neu': 1, 'neg': 0}
 

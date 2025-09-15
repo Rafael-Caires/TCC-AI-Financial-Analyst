@@ -27,6 +27,54 @@ predictions_bp = Blueprint('predictions', __name__, url_prefix='/api/predictions
 # Inicializa o integrador de modelos
 model_integrator = ModelIntegrator(models_dir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'models'))
 
+# Rota específica para previsões por ticker (compatível com frontend)
+@predictions_bp.route('/<ticker>', methods=['GET'])
+def get_prediction_by_ticker(ticker):
+    """
+    Obtém previsão para um ativo específico via URL.
+    
+    Args:
+        ticker (str): Ticker do ativo
+        
+    Returns:
+        JSON: Previsão para o ativo
+    """
+    try:
+        days = int(request.args.get('days', 7))
+        
+        # Dados simulados de previsão para desenvolvimento
+        prediction_data = {
+            'success': True,
+            'ticker': ticker,
+            'current_price': 32.45 if ticker == 'PETR4' else 25.80,
+            'prediction_days': days,
+            'predictions': [
+                {
+                    'date': (datetime.now() + timedelta(days=i)).strftime('%Y-%m-%d'),
+                    'predicted_price': round(32.45 + (i * 0.5) + np.random.normal(0, 0.3), 2),
+                    'confidence': round((0.85 - (i * 0.02)) * 100, 1),  # Convertendo para porcentagem e arredondando
+                    'change_percentage': round(np.random.normal(2.0, 1.5), 1),  # Variação percentual simulada
+                    'trend': 'up' if np.random.random() > 0.4 else 'down'  # Trend aleatório com viés positivo
+                } for i in range(1, days + 1)
+            ],
+            'analysis': {
+                'trend': 'bullish',
+                'volatility': 'medium',
+                'support_level': 30.50,
+                'resistance_level': 35.20,
+                'recommendation': 'BUY'
+            }
+        }
+        
+        return jsonify(prediction_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Erro na previsão: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao obter previsão: {str(e)}'
+        }), 500
+
 # Rota para obter previsão para um ativo
 @predictions_bp.route('/forecast', methods=['GET'])
 @token_required

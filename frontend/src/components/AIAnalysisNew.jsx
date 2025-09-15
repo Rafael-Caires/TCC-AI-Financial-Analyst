@@ -98,17 +98,12 @@ const AIAnalysis = () => {
   const loadAnalysis = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:5000/api/ai-analysis/complete/${selectedStock}`)
+      const response = await fetch(`/api/ai-analysis/complete/${selectedStock}`)
       const result = await response.json()
       
-      console.log('Resposta da API:', result)
-      
       if (result.success) {
-        console.log('Dados recebidos:', result.data)
         setAnalysisData(result.data)
         await loadMarketRegime()
-      } else {
-        console.log('API retornou success: false')
       }
     } catch (error) {
       console.error('Erro ao carregar análise:', error)
@@ -119,7 +114,7 @@ const AIAnalysis = () => {
 
   const loadMarketRegime = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/ai-analysis/market-regime')
+      const response = await fetch('/api/ai-analysis/market-regime')
       const result = await response.json()
       
       if (result.success) {
@@ -133,7 +128,7 @@ const AIAnalysis = () => {
   const loadRecommendations = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5000/api/recommendations/advanced', {
+      const response = await fetch('/api/recommendations/advanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,18 +140,13 @@ const AIAnalysis = () => {
 
       const result = await response.json()
       
-      console.log('Resposta recomendações:', result)
-      
       if (result.success) {
-        console.log('Recomendações recebidas:', result.data)
         setRecommendations(result.data)
         
         // Carrega análise de risco do portfólio sugerido
         if (result.data.suggested_allocation) {
           loadPortfolioRiskAnalysis(result.data.suggested_allocation)
         }
-      } else {
-        console.log('API recomendações retornou success: false')
       }
     } catch (error) {
       console.error('Erro ao carregar recomendações:', error)
@@ -172,7 +162,7 @@ const AIAnalysis = () => {
         portfolioWeights[item.ticker] = item.weight
       })
 
-      const response = await fetch('http://localhost:5000/api/risk-analysis/portfolio', {
+      const response = await fetch('/api/risk-analysis/portfolio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ portfolio_weights: portfolioWeights })

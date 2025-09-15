@@ -41,6 +41,8 @@ export default function Predictions() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('Predictions API response:', data) // Debug
+        // A API retorna predictions diretamente, não dentro de data.predictions
         setPredictions(data.predictions || [])
       } else {
         // Dados simulados se a API não estiver disponível
@@ -135,7 +137,12 @@ export default function Predictions() {
   }
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR')
+    if (!dateString) return 'Data inválida'
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR')
+    } catch (error) {
+      return 'Data inválida'
+    }
   }
 
   const getConfidenceColor = (confidence) => {
@@ -225,30 +232,30 @@ export default function Predictions() {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">{formatDate(prediction.date)}</span>
+                      <span className="font-medium">{formatDate(prediction.date || '')}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {prediction.trend === 'up' ? (
+                      {(prediction.trend || 'down') === 'up' ? (
                         <TrendingUp className="w-4 h-4 text-green-600" />
                       ) : (
                         <TrendingDown className="w-4 h-4 text-red-600" />
                       )}
                       <span className="text-lg font-bold">
-                        {formatCurrency(prediction.predicted_price)}
+                        {formatCurrency(prediction.predicted_price || 0)}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className={`font-medium ${
-                        prediction.change_percentage >= 0 ? 'text-green-600' : 'text-red-600'
+                        (prediction.change_percentage || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {prediction.change_percentage >= 0 ? '+' : ''}{prediction.change_percentage.toFixed(1)}%
+                        {(prediction.change_percentage || 0) >= 0 ? '+' : ''}{(prediction.change_percentage || 0)}%
                       </div>
                       <div className="text-sm text-muted-foreground">Variação</div>
                     </div>
-                    <Badge className={getConfidenceColor(prediction.confidence)}>
-                      {prediction.confidence}% confiança
+                    <Badge className={getConfidenceColor(prediction.confidence || 0)}>
+                      {(prediction.confidence || 0)}% confiança
                     </Badge>
                   </div>
                 </div>

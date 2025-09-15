@@ -36,50 +36,111 @@ class AdvancedRecommendationSystem:
         self.sentiment_analyzer = SentimentAnalyzer()
         self.scaler = StandardScaler()
         
-        # Base de dados de ativos (seria expandida em produção)
+        # Base expandida de ativos brasileiros
         self.asset_universe = {
-            # Ações brasileiras
-            'PETR4.SA': {'sector': 'Energy', 'market_cap': 'Large', 'dividend_yield': 0.08},
-            'VALE3.SA': {'sector': 'Materials', 'market_cap': 'Large', 'dividend_yield': 0.12},
-            'ITUB4.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.06},
-            'BBDC4.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.05},
-            'ABEV3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Large', 'dividend_yield': 0.04},
-            'WEGE3.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.02},
-            'MGLU3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Large', 'dividend_yield': 0.00},
-            'RENT3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Large', 'dividend_yield': 0.01},
-            'LREN3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Large', 'dividend_yield': 0.02},
-            'SUZB3.SA': {'sector': 'Materials', 'market_cap': 'Large', 'dividend_yield': 0.03},
+            # Setor Financeiro
+            'ITUB4.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.06, 'beta': 1.2},
+            'BBDC4.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.05, 'beta': 1.1},
+            'SANB11.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.07, 'beta': 1.3},
+            'BBAS3.SA': {'sector': 'Financial', 'market_cap': 'Large', 'dividend_yield': 0.06, 'beta': 1.2},
+            'BTOW3.SA': {'sector': 'Financial', 'market_cap': 'Medium', 'dividend_yield': 0.04, 'beta': 1.4},
             
-            # FIIs
-            'HGLG11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.10},
-            'XPML11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.09},
-            'VISC11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.08},
-            'BCFF11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.11},
-            'KNRI11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.09},
+            # Setor Petróleo e Gás
+            'PETR4.SA': {'sector': 'Energy', 'market_cap': 'Large', 'dividend_yield': 0.08, 'beta': 1.5},
+            'PETR3.SA': {'sector': 'Energy', 'market_cap': 'Large', 'dividend_yield': 0.09, 'beta': 1.6},
+            'PRIO3.SA': {'sector': 'Energy', 'market_cap': 'Medium', 'dividend_yield': 0.04, 'beta': 1.8},
+            'UGPA3.SA': {'sector': 'Energy', 'market_cap': 'Small', 'dividend_yield': 0.03, 'beta': 2.0},
+            
+            # Setor Mineração
+            'VALE3.SA': {'sector': 'Materials', 'market_cap': 'Large', 'dividend_yield': 0.12, 'beta': 1.4},
+            'CSNA3.SA': {'sector': 'Materials', 'market_cap': 'Medium', 'dividend_yield': 0.05, 'beta': 1.6},
+            'SUZB3.SA': {'sector': 'Materials', 'market_cap': 'Medium', 'dividend_yield': 0.03, 'beta': 1.3},
+            'USIM5.SA': {'sector': 'Materials', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.7},
+            
+            # Setor Consumo
+            'ABEV3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Large', 'dividend_yield': 0.04, 'beta': 0.8},
+            'JBSS3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Large', 'dividend_yield': 0.03, 'beta': 1.0},
+            'BRF3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.2},
+            'MRFG3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Medium', 'dividend_yield': 0.01, 'beta': 1.4},
+            'NTCO3.SA': {'sector': 'Consumer Staples', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.1},
+            
+            # Setor Varejo
+            'MGLU3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Medium', 'dividend_yield': 0.00, 'beta': 2.1},
+            'LREN3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Medium', 'dividend_yield': 0.03, 'beta': 1.5},
+            'AMER3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.7},
+            'RENT3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Medium', 'dividend_yield': 0.01, 'beta': 1.6},
+            'VVAR3.SA': {'sector': 'Consumer Discretionary', 'market_cap': 'Small', 'dividend_yield': 0.01, 'beta': 1.9},
+            
+            # Setor Tecnologia
+            'TOTS3.SA': {'sector': 'Technology', 'market_cap': 'Medium', 'dividend_yield': 0.01, 'beta': 1.9},
+            'LWSA3.SA': {'sector': 'Technology', 'market_cap': 'Small', 'dividend_yield': 0.00, 'beta': 2.5},
+            'MELI34.SA': {'sector': 'Technology', 'market_cap': 'Large', 'dividend_yield': 0.00, 'beta': 2.2},
+            
+            # Setor Industrial
+            'WEGE3.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.02, 'beta': 1.1},
+            'RAIL3.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.04, 'beta': 1.3},
+            'CCRO3.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.03, 'beta': 1.2},
+            'KLBN11.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.03, 'beta': 1.0},
+            'EMBR3.SA': {'sector': 'Industrials', 'market_cap': 'Large', 'dividend_yield': 0.02, 'beta': 1.4},
+            
+            # Utilities
+            'ELET3.SA': {'sector': 'Utilities', 'market_cap': 'Large', 'dividend_yield': 0.06, 'beta': 0.9},
+            'EGIE3.SA': {'sector': 'Utilities', 'market_cap': 'Large', 'dividend_yield': 0.07, 'beta': 0.8},
+            'CPFE3.SA': {'sector': 'Utilities', 'market_cap': 'Large', 'dividend_yield': 0.05, 'beta': 0.7},
+            'SBSP3.SA': {'sector': 'Utilities', 'market_cap': 'Large', 'dividend_yield': 0.04, 'beta': 0.6},
+            
+            # Telecomunicações
+            'TIMS3.SA': {'sector': 'Communication Services', 'market_cap': 'Large', 'dividend_yield': 0.05, 'beta': 1.1},
+            'VIVT3.SA': {'sector': 'Communication Services', 'market_cap': 'Large', 'dividend_yield': 0.06, 'beta': 1.0},
+            
+            # Saúde
+            'RDOR3.SA': {'sector': 'Healthcare', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.3},
+            'HAPV3.SA': {'sector': 'Healthcare', 'market_cap': 'Medium', 'dividend_yield': 0.01, 'beta': 1.4},
+            'FLRY3.SA': {'sector': 'Healthcare', 'market_cap': 'Medium', 'dividend_yield': 0.03, 'beta': 1.2},
+            
+            # FIIs - Fundos Imobiliários
+            'KNRI11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.09, 'beta': 0.7},
+            'HGLG11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.08, 'beta': 0.6},
+            'XPML11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.09, 'beta': 0.7},
+            'VISC11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.08, 'beta': 0.6},
+            'BCFF11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.11, 'beta': 0.8},
+            'MXRF11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.10, 'beta': 0.7},
+            'KNCR11.SA': {'sector': 'Real Estate', 'market_cap': 'Medium', 'dividend_yield': 0.09, 'beta': 0.6},
+            
+            # ETFs
+            'BOVA11.SA': {'sector': 'ETF', 'market_cap': 'Large', 'dividend_yield': 0.04, 'beta': 1.0},
+            'SMAL11.SA': {'sector': 'ETF', 'market_cap': 'Medium', 'dividend_yield': 0.02, 'beta': 1.1},
+            'DIVO11.SA': {'sector': 'ETF', 'market_cap': 'Medium', 'dividend_yield': 0.06, 'beta': 0.9},
         }
         
-        # Perfis de risco predefinidos
+        # Perfis de risco detalhados
         self.risk_profiles = {
             'conservador': {
                 'max_volatility': 0.15,
                 'min_dividend_yield': 0.04,
                 'max_single_position': 0.15,
-                'preferred_sectors': ['Financial', 'Consumer Staples', 'Real Estate'],
-                'avoid_sectors': ['Technology', 'Biotechnology']
+                'preferred_sectors': ['Financial', 'Consumer Staples', 'Real Estate', 'ETF', 'Utilities'],
+                'avoid_sectors': ['Technology'],
+                'max_beta': 1.2,
+                'min_market_cap': 'Medium'
             },
             'moderado': {
                 'max_volatility': 0.25,
                 'min_dividend_yield': 0.02,
                 'max_single_position': 0.20,
-                'preferred_sectors': ['Financial', 'Consumer Staples', 'Industrials', 'Materials'],
-                'avoid_sectors': ['Biotechnology']
+                'preferred_sectors': ['Financial', 'Consumer Staples', 'Industrials', 'Materials', 'Energy'],
+                'avoid_sectors': [],
+                'max_beta': 1.8,
+                'min_market_cap': 'Small'
             },
             'agressivo': {
                 'max_volatility': 0.40,
                 'min_dividend_yield': 0.00,
                 'max_single_position': 0.30,
                 'preferred_sectors': ['Technology', 'Consumer Discretionary', 'Energy'],
-                'avoid_sectors': []
+                'avoid_sectors': [],
+                'max_beta': 3.0,
+                'min_market_cap': 'Small'
             }
         }
         
@@ -108,47 +169,62 @@ class AdvancedRecommendationSystem:
             investment_goals = user_profile.get('investment_goals', [])
             time_horizon = user_profile.get('time_horizon', 'medium')  # short, medium, long
             
-            # Obtém dados de mercado
-            market_data = self._get_market_data()
+            # Obtém dados de mercado atualizados
+            market_data = self._get_market_data(period='2y')
             
             if market_data.empty:
                 return self._empty_recommendations()
             
-            # Calcula features dos ativos
-            asset_features = self._calculate_asset_features(market_data)
+            # 1. Filtragem por conteúdo (características dos ativos)
+            content_scores = self._content_based_filtering(market_data, risk_profile, investment_goals)
             
-            # Filtragem baseada no perfil de risco
-            filtered_assets = self._filter_by_risk_profile(asset_features, risk_profile)
+            # 2. Filtragem colaborativa (usuários similares)
+            collaborative_scores = self._collaborative_filtering(user_profile, current_portfolio)
             
-            # Análise de sentimento
-            sentiment_scores = self._get_sentiment_scores(list(filtered_assets.keys()))
+            # 3. Análise de sentimento
+            sentiment_scores = self._get_sentiment_scores(list(self.asset_universe.keys()))
             
-            # Combina scores
-            combined_scores = self._combine_recommendation_scores(
-                filtered_assets, sentiment_scores, user_profile
+            # 4. Análise técnica
+            technical_scores = self._technical_analysis(market_data)
+            
+            # 5. Análise fundamentalista
+            fundamental_scores = self._fundamental_analysis()
+            
+            # 6. Combina todos os scores (sistema híbrido)
+            combined_scores = self._hybrid_scoring(
+                content_scores, collaborative_scores, sentiment_scores,
+                technical_scores, fundamental_scores, risk_profile
             )
             
-            # Seleciona top recomendações
+            # 7. Seleciona top recomendações
             top_recommendations = self._select_top_recommendations(
                 combined_scores, current_portfolio, num_recommendations
             )
             
-            # Gera alocação sugerida
+            # 8. Gera alocação otimizada
             suggested_allocation = self._generate_portfolio_allocation(
                 top_recommendations, portfolio_value, risk_profile
             )
             
-            # Análise de diversificação
+            # 9. Análise de diversificação
             diversification_analysis = self._analyze_diversification(suggested_allocation)
+            
+            # 10. Análise de risco do portfólio sugerido
+            portfolio_risk_analysis = self._analyze_portfolio_risk(suggested_allocation)
             
             return {
                 'recommendations': top_recommendations,
                 'suggested_allocation': suggested_allocation,
                 'diversification_analysis': diversification_analysis,
+                'portfolio_risk_analysis': portfolio_risk_analysis,
                 'risk_profile_used': risk_profile,
                 'total_portfolio_value': portfolio_value,
+                'user_profile': user_profile,
                 'generation_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'methodology': 'hybrid_collaborative_content_sentiment'
+                'methodology': 'hybrid_collaborative_content_sentiment_technical_fundamental',
+                'confidence_score': self._calculate_confidence_score(combined_scores, top_recommendations),
+                'market_regime': self._detect_market_regime(market_data),
+                'rebalancing_frequency': self._suggest_rebalancing_frequency(risk_profile),
             }
             
         except Exception as e:
@@ -834,4 +910,326 @@ class AdvancedRecommendationSystem:
             recommendations.append("Momentum negativo: Cautela com novas posições")
         
         return recommendations
-
+    
+    def _content_based_filtering(self, market_data: pd.DataFrame, 
+                               risk_profile: str, investment_goals: List[str]) -> Dict[str, float]:
+        """Filtragem baseada em características dos ativos."""
+        scores = {}
+        profile_config = self.risk_profiles[risk_profile]
+        
+        for ticker, asset_info in self.asset_universe.items():
+            score = 0.0
+            
+            # Score baseado no setor preferido
+            if asset_info['sector'] in profile_config['preferred_sectors']:
+                score += 0.3
+            elif asset_info['sector'] in profile_config.get('avoid_sectors', []):
+                score -= 0.2
+            
+            # Score baseado no dividend yield
+            div_yield = asset_info.get('dividend_yield', 0)
+            if div_yield >= profile_config['min_dividend_yield']:
+                score += 0.2
+            
+            # Score baseado no beta (risco sistemático)
+            beta = asset_info.get('beta', 1.0)
+            if beta <= profile_config.get('max_beta', 2.0):
+                score += 0.1
+            else:
+                score -= 0.1
+            
+            # Score baseado nos objetivos de investimento
+            for goal in investment_goals:
+                if goal == 'crescimento' and asset_info['sector'] in ['Technology', 'Consumer Discretionary']:
+                    score += 0.15
+                elif goal == 'renda' and div_yield > 0.05:
+                    score += 0.15
+                elif goal == 'preservacao' and asset_info['sector'] in ['Consumer Staples', 'Real Estate']:
+                    score += 0.15
+            
+            # Normaliza score
+            scores[ticker] = max(0, min(1, score))
+        
+        return scores
+    
+    def _collaborative_filtering(self, user_profile: Dict[str, Any], 
+                               current_portfolio: Dict[str, float]) -> Dict[str, float]:
+        """Filtragem colaborativa baseada em usuários similares."""
+        scores = {}
+        
+        # Simula base de usuários similares
+        similar_users = self._find_similar_users(user_profile)
+        
+        for ticker in self.asset_universe.keys():
+            score = 0.0
+            total_weight = 0.0
+            
+            for similar_user, similarity in similar_users.items():
+                user_portfolio = similar_user.get('portfolio', {})
+                if ticker in user_portfolio:
+                    # Peso baseado na similaridade e performance do usuário
+                    user_performance = similar_user.get('performance', 0.0)
+                    weight = similarity * (1 + user_performance)
+                    score += user_portfolio[ticker] * weight
+                    total_weight += weight
+            
+            scores[ticker] = score / total_weight if total_weight > 0 else 0.0
+        
+        return scores
+    
+    def _technical_analysis(self, market_data: pd.DataFrame) -> Dict[str, float]:
+        """Análise técnica para scoring dos ativos."""
+        scores = {}
+        
+        for ticker in self.asset_universe.keys():
+            if ticker in market_data.columns:
+                try:
+                    prices = market_data[ticker].dropna()
+                    if len(prices) < 50:
+                        scores[ticker] = 0.5
+                        continue
+                    
+                    score = 0.0
+                    
+                    # Média móvel
+                    sma_20 = prices.rolling(20).mean().iloc[-1]
+                    sma_50 = prices.rolling(50).mean().iloc[-1]
+                    current_price = prices.iloc[-1]
+                    
+                    if current_price > sma_20 > sma_50:
+                        score += 0.3  # Tendência de alta
+                    elif current_price < sma_20 < sma_50:
+                        score -= 0.2  # Tendência de baixa
+                    
+                    # RSI
+                    rsi = self._calculate_rsi(prices)
+                    if 30 < rsi < 70:
+                        score += 0.2  # RSI neutro
+                    elif rsi < 30:
+                        score += 0.3  # Oversold
+                    elif rsi > 70:
+                        score -= 0.1  # Overbought
+                    
+                    # Volatilidade
+                    returns = prices.pct_change().dropna()
+                    volatility = returns.std() * np.sqrt(252)
+                    if volatility < 0.3:
+                        score += 0.1
+                    elif volatility > 0.5:
+                        score -= 0.1
+                    
+                    scores[ticker] = max(0, min(1, score + 0.5))
+                    
+                except Exception as e:
+                    scores[ticker] = 0.5
+            else:
+                scores[ticker] = 0.5
+        
+        return scores
+    
+    def _fundamental_analysis(self) -> Dict[str, float]:
+        """Análise fundamentalista baseada em métricas dos ativos."""
+        scores = {}
+        
+        for ticker, asset_info in self.asset_universe.items():
+            score = 0.5  # Score base
+            
+            # Dividend yield
+            div_yield = asset_info.get('dividend_yield', 0)
+            if div_yield > 0.06:
+                score += 0.2
+            elif div_yield > 0.03:
+                score += 0.1
+            
+            # Market cap (estabilidade)
+            market_cap = asset_info.get('market_cap', 'Medium')
+            if market_cap == 'Large':
+                score += 0.1
+            elif market_cap == 'Small':
+                score += 0.05  # Pequeno prêmio de risco
+            
+            # Beta (risco sistemático)
+            beta = asset_info.get('beta', 1.0)
+            if 0.8 <= beta <= 1.2:
+                score += 0.1  # Beta próximo ao mercado
+            
+            scores[ticker] = max(0, min(1, score))
+        
+        return scores
+    
+    def _hybrid_scoring(self, content_scores: Dict[str, float], 
+                       collaborative_scores: Dict[str, float],
+                       sentiment_scores: Dict[str, float],
+                       technical_scores: Dict[str, float],
+                       fundamental_scores: Dict[str, float],
+                       risk_profile: str) -> Dict[str, float]:
+        """Combina todos os scores usando pesos adaptativos."""
+        
+        # Pesos baseados no perfil de risco
+        if risk_profile == 'conservador':
+            weights = {
+                'content': 0.30,
+                'collaborative': 0.25,
+                'sentiment': 0.10,
+                'technical': 0.15,
+                'fundamental': 0.20
+            }
+        elif risk_profile == 'moderado':
+            weights = {
+                'content': 0.25,
+                'collaborative': 0.20,
+                'sentiment': 0.15,
+                'technical': 0.20,
+                'fundamental': 0.20
+            }
+        else:  # agressivo
+            weights = {
+                'content': 0.20,
+                'collaborative': 0.15,
+                'sentiment': 0.25,
+                'technical': 0.25,
+                'fundamental': 0.15
+            }
+        
+        combined_scores = {}
+        
+        for ticker in self.asset_universe.keys():
+            score = (
+                weights['content'] * content_scores.get(ticker, 0.5) +
+                weights['collaborative'] * collaborative_scores.get(ticker, 0.5) +
+                weights['sentiment'] * sentiment_scores.get(ticker, 0.5) +
+                weights['technical'] * technical_scores.get(ticker, 0.5) +
+                weights['fundamental'] * fundamental_scores.get(ticker, 0.5)
+            )
+            combined_scores[ticker] = score
+        
+        return combined_scores
+    
+    def _analyze_portfolio_risk(self, allocation: Dict[str, Any]) -> Dict[str, Any]:
+        """Análise completa de risco do portfólio sugerido."""
+        if not allocation.get('allocations'):
+            return {}
+        
+        try:
+            # Monta portfólio para análise
+            portfolio_weights = {}
+            for alloc in allocation['allocations']:
+                portfolio_weights[alloc['ticker']] = alloc['weight']
+            
+            # Obtém dados históricos
+            market_data = self._get_market_data(period='1y')
+            portfolio_tickers = list(portfolio_weights.keys())
+            
+            if not market_data.empty:
+                available_data = market_data[portfolio_tickers].dropna()
+                returns = available_data.pct_change().dropna()
+                
+                # Calcula retorno do portfólio
+                weights = np.array([portfolio_weights[ticker] for ticker in portfolio_tickers])
+                portfolio_returns = (returns * weights).sum(axis=1)
+                
+                # Métricas de risco
+                risk_metrics = self.risk_analyzer.calculate_portfolio_metrics(
+                    {ticker: portfolio_weights[ticker] for ticker in portfolio_tickers},
+                    returns
+                )
+                
+                return risk_metrics
+                
+        except Exception as e:
+            print(f"Erro na análise de risco do portfólio: {e}")
+        
+        return {}
+    
+    def _calculate_rsi(self, prices: pd.Series, periods: int = 14) -> float:
+        """Calcula RSI (Relative Strength Index)."""
+        delta = prices.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=periods).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=periods).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi.iloc[-1] if not rsi.empty else 50.0
+    
+    def _find_similar_users(self, user_profile: Dict[str, Any]) -> Dict[str, float]:
+        """Encontra usuários similares para filtragem colaborativa."""
+        # Simula base de usuários para demonstração
+        similar_users = {
+            'user_1': {
+                'risk_profile': user_profile.get('risk_profile', 'moderado'),
+                'portfolio': {'ITUB4.SA': 0.15, 'VALE3.SA': 0.20, 'WEGE3.SA': 0.10},
+                'performance': 0.12,
+                'similarity': 0.85
+            },
+            'user_2': {
+                'risk_profile': user_profile.get('risk_profile', 'moderado'),
+                'portfolio': {'PETR4.SA': 0.18, 'BBDC4.SA': 0.12, 'ABEV3.SA': 0.15},
+                'performance': 0.08,
+                'similarity': 0.72
+            }
+        }
+        
+        return {user: data['similarity'] for user, data in similar_users.items()}
+    
+    def _calculate_confidence_score(self, combined_scores: Dict[str, float], 
+                                  recommendations: List[Dict[str, Any]]) -> float:
+        """Calcula score de confiança das recomendações."""
+        if not recommendations:
+            return 0.0
+        
+        # Score baseado na dispersão dos scores
+        scores = [rec['score'] for rec in recommendations]
+        if not scores:
+            return 0.0
+        
+        avg_score = np.mean(scores)
+        score_std = np.std(scores)
+        
+        # Confiança inversamente proporcional à dispersão
+        confidence = max(0, min(1, avg_score * (1 - score_std)))
+        
+        return confidence
+    
+    def _detect_market_regime(self, market_data: pd.DataFrame) -> str:
+        """Detecta regime atual do mercado."""
+        try:
+            # Usa IBOV como proxy do mercado
+            if '^BVSP' in market_data.columns:
+                market_prices = market_data['^BVSP']
+            else:
+                # Usa média dos ativos como proxy
+                market_prices = market_data.mean(axis=1)
+            
+            if len(market_prices) < 50:
+                return 'indefinido'
+            
+            # Calcula indicadores
+            sma_20 = market_prices.rolling(20).mean().iloc[-1]
+            sma_50 = market_prices.rolling(50).mean().iloc[-1]
+            current_price = market_prices.iloc[-1]
+            
+            returns = market_prices.pct_change().dropna()
+            volatility = returns.rolling(30).std().iloc[-1] * np.sqrt(252)
+            
+            # Classifica regime
+            if current_price > sma_20 > sma_50 and volatility < 0.25:
+                return 'alta_estavel'
+            elif current_price > sma_20 > sma_50 and volatility >= 0.25:
+                return 'alta_volatil'
+            elif current_price < sma_20 < sma_50 and volatility < 0.25:
+                return 'baixa_estavel'
+            elif current_price < sma_20 < sma_50 and volatility >= 0.25:
+                return 'baixa_volatil'
+            else:
+                return 'lateral'
+                
+        except Exception as e:
+            return 'indefinido'
+    
+    def _suggest_rebalancing_frequency(self, risk_profile: str) -> str:
+        """Sugere frequência de rebalanceamento baseada no perfil."""
+        frequencies = {
+            'conservador': 'semestral',
+            'moderado': 'trimestral',
+            'agressivo': 'mensal'
+        }
+        return frequencies.get(risk_profile, 'trimestral')

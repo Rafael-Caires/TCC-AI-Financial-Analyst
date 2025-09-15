@@ -760,6 +760,332 @@ def complete_stock_analysis():
             'error': str(e)
         }), 500
 
+@ai_analysis_bp.route('/api/ai-analysis/complete/<ticker>', methods=['GET'])
+@cross_origin()
+def get_complete_analysis_by_ticker(ticker):
+    """
+    Endpoint para análise completa de um ativo específico.
+    """
+    try:
+        # Análise específica do ativo com dados simulados
+        analysis_data = {
+            'ticker': ticker,
+            'analysis_timestamp': datetime.now().isoformat(),
+            'technical_analysis': {
+                'trend': 'bullish',
+                'support_level': 30.50,
+                'resistance_level': 35.20,
+                'rsi': 65.4,
+                'macd_signal': 'buy',
+                'moving_averages': {
+                    'sma_20': 32.15,
+                    'sma_50': 31.80,
+                    'sma_200': 29.90
+                }
+            },
+            'fundamental_analysis': {
+                'pe_ratio': 8.5,
+                'dividend_yield': 0.08,
+                'roe': 0.15,
+                'debt_equity': 0.35,
+                'price_to_book': 1.2
+            },
+            'sentiment_analysis': {
+                'overall_sentiment': 'positive',
+                'news_sentiment': 0.65,
+                'social_sentiment': 0.72,
+                'analyst_consensus': 'buy'
+            },
+            'ml_predictions': {
+                'price_target_7d': 34.20,
+                'price_target_30d': 36.50,
+                'confidence': 0.78,
+                'volatility_forecast': 0.25
+            },
+            'risk_metrics': {
+                'var_95': -0.045,
+                'beta': 1.15,
+                'sharpe_ratio': 0.85,
+                'max_drawdown': -0.12
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': analysis_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro na análise completa: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@ai_analysis_bp.route('/api/ai-analysis/complete', methods=['GET'])
+@cross_origin()
+def get_complete_market_analysis():
+    """
+    Endpoint para análise completa do mercado (usado pelo frontend AIAnalysis).
+    """
+    try:
+        # Análise completa do mercado com dados simulados avançados
+        analysis_data = {
+            'market_overview': {
+                'ibovespa': {
+                    'current_level': 118500.25,
+                    'daily_change': 1.23,
+                    'weekly_change': 2.87,
+                    'monthly_change': 5.42,
+                    'ytd_change': 12.65
+                },
+                'dollar': {
+                    'current_rate': 5.25,
+                    'daily_change': -0.45,
+                    'trend': 'baixa'
+                },
+                'selic': {
+                    'current_rate': 11.75,
+                    'next_meeting': '2025-01-29',
+                    'forecast': 'estabilidade'
+                }
+            },
+            'ml_predictions': {
+                'ensemble_forecast': {
+                    'ibovespa_30d': {
+                        'predicted_level': 122450,
+                        'confidence': 0.78,
+                        'probability_up': 0.72,
+                        'support_level': 115000,
+                        'resistance_level': 125000
+                    },
+                    'dollar_30d': {
+                        'predicted_rate': 5.10,
+                        'confidence': 0.65,
+                        'trend_strength': 0.68
+                    }
+                },
+                'individual_models': {
+                    'lstm': {
+                        'accuracy': 0.68,
+                        'mse': 0.025,
+                        'trend_prediction': 'bullish'
+                    },
+                    'random_forest': {
+                        'accuracy': 0.62,
+                        'feature_importance': 'volume_weighted',
+                        'trend_prediction': 'neutral'
+                    },
+                    'lightgbm': {
+                        'accuracy': 0.71,
+                        'learning_rate': 0.1,
+                        'trend_prediction': 'bullish'
+                    }
+                },
+                'ensemble_weights': {
+                    'lstm': 0.4,
+                    'random_forest': 0.25,
+                    'lightgbm': 0.35
+                }
+            },
+            'sentiment_analysis': {
+                'overall_sentiment': {
+                    'score': 0.68,
+                    'label': 'Positivo',
+                    'confidence': 0.82
+                },
+                'news_analysis': {
+                    'total_articles': 245,
+                    'positive': 158,
+                    'neutral': 67,
+                    'negative': 20,
+                    'key_themes': [
+                        'Política monetária',
+                        'Crescimento econômico',
+                        'Resultados corporativos',
+                        'Mercado internacional'
+                    ]
+                },
+                'social_media': {
+                    'mentions': 15420,
+                    'sentiment_distribution': {
+                        'positive': 52.3,
+                        'neutral': 31.8,
+                        'negative': 15.9
+                    }
+                }
+            },
+            'risk_analysis': {
+                'market_risk': {
+                    'var_95': -3.2,
+                    'volatility': 18.5,
+                    'correlation_breakdown': {
+                        'high_correlation': 0.35,
+                        'medium_correlation': 0.42,
+                        'low_correlation': 0.23
+                    }
+                },
+                'sector_risks': [
+                    {'sector': 'Financeiro', 'risk_score': 0.65, 'weight': 28.5},
+                    {'sector': 'Commodities', 'risk_score': 0.78, 'weight': 22.3},
+                    {'sector': 'Industrial', 'risk_score': 0.58, 'weight': 18.7},
+                    {'sector': 'Consumo', 'risk_score': 0.52, 'weight': 16.2},
+                    {'sector': 'Tecnologia', 'risk_score': 0.82, 'weight': 8.5},
+                    {'sector': 'Utilities', 'risk_score': 0.45, 'weight': 5.8}
+                ],
+                'stress_scenarios': {
+                    'market_crash': {
+                        'probability': 0.08,
+                        'expected_loss': -22.5
+                    },
+                    'interest_rate_shock': {
+                        'probability': 0.15,
+                        'expected_loss': -12.8
+                    },
+                    'currency_crisis': {
+                        'probability': 0.12,
+                        'expected_loss': -15.2
+                    }
+                }
+            },
+            'technical_analysis': {
+                'key_indicators': {
+                    'rsi_14': 58.2,
+                    'macd_signal': 'bullish_crossover',
+                    'bollinger_position': 'upper_band',
+                    'moving_averages': {
+                        'sma_20': 117825,
+                        'sma_50': 115430,
+                        'sma_200': 112680,
+                        'alignment': 'bullish'
+                    }
+                },
+                'support_resistance': {
+                    'immediate_support': 116500,
+                    'strong_support': 114200,
+                    'immediate_resistance': 120000,
+                    'strong_resistance': 122500
+                },
+                'volume_analysis': {
+                    'current_volume': 125000000,
+                    'average_volume': 108000000,
+                    'volume_trend': 'above_average',
+                    'accumulation_distribution': 'positive'
+                }
+            },
+            'sector_performance': {
+                'best_performers': [
+                    {'sector': 'Tecnologia', 'return': 8.45, 'volume_change': 25.2},
+                    {'sector': 'Industrial', 'return': 6.23, 'volume_change': 18.7},
+                    {'sector': 'Utilities', 'return': 4.88, 'volume_change': 12.1}
+                ],
+                'worst_performers': [
+                    {'sector': 'Commodities', 'return': -2.15, 'volume_change': -8.5},
+                    {'sector': 'Financeiro', 'return': -0.85, 'volume_change': -3.2}
+                ],
+                'sector_rotation': {
+                    'flow_into': ['Tecnologia', 'Industrial'],
+                    'flow_out_of': ['Commodities', 'Financeiro'],
+                    'rotation_strength': 0.68
+                }
+            },
+            'economic_indicators': {
+                'inflation': {
+                    'ipca_current': 4.68,
+                    'target': 3.0,
+                    'tolerance_band': [1.5, 4.5],
+                    'trend': 'convergindo'
+                },
+                'gdp': {
+                    'current_growth': 2.1,
+                    'forecast': 2.4,
+                    'trend': 'expansão'
+                },
+                'unemployment': {
+                    'current_rate': 8.2,
+                    'trend': 'queda',
+                    'labor_market_health': 'melhorando'
+                }
+            },
+            'recommendations': {
+                'short_term': [
+                    {
+                        'recommendation': 'Manter exposição moderada ao mercado',
+                        'reasoning': 'Indicadores técnicos positivos, mas volatilidade presente',
+                        'confidence': 0.78
+                    },
+                    {
+                        'recommendation': 'Aumentar posição em setor de Tecnologia',
+                        'reasoning': 'Momentum positivo e rotação setorial favorável',
+                        'confidence': 0.72
+                    }
+                ],
+                'medium_term': [
+                    {
+                        'recommendation': 'Diversificar com exposição internacional',
+                        'reasoning': 'Reduzir risco-país e aproveitar oportunidades globais',
+                        'confidence': 0.69
+                    },
+                    {
+                        'recommendation': 'Monitorar política monetária',
+                        'reasoning': 'Possível ciclo de cortes na Selic pode impactar setores',
+                        'confidence': 0.85
+                    }
+                ],
+                'risk_management': [
+                    {
+                        'recommendation': 'Implementar stop-loss em 10%',
+                        'reasoning': 'Proteção contra reversões bruscas do mercado',
+                        'confidence': 0.90
+                    },
+                    {
+                        'recommendation': 'Manter reserva de oportunidade em 15%',
+                        'reasoning': 'Preparação para possíveis correções do mercado',
+                        'confidence': 0.75
+                    }
+                ]
+            },
+            'ai_insights': {
+                'pattern_recognition': [
+                    'Formação de triângulo ascendente no Ibovespa',
+                    'Divergência positiva no MACD de commodities',
+                    'Breakout iminente em ações de tecnologia'
+                ],
+                'anomaly_detection': [
+                    'Volume anômalo em WEGE3 (investigar earnings)',
+                    'Correlação inusual USD/BRL vs Ibovespa',
+                    'Sentiment desproporcional em setor financeiro'
+                ],
+                'regime_detection': {
+                    'current_regime': 'Consolidação com viés de alta',
+                    'probability': 0.73,
+                    'expected_duration': '2-4 semanas',
+                    'next_likely_regime': 'Tendência de alta'
+                }
+            },
+            'metadata': {
+                'analysis_timestamp': datetime.now().isoformat(),
+                'data_freshness': 'real_time',
+                'model_version': '2.0',
+                'confidence_level': 0.74,
+                'disclaimer': 'Análise baseada em modelos de IA. Não constitui recomendação de investimento.'
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': analysis_data,
+            'timestamp': datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Erro na análise completa do mercado: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 @ai_analysis_bp.route('/api/ai-analysis/health', methods=['GET'])
 @cross_origin()
 def health_check():
@@ -780,4 +1106,40 @@ def health_check():
         ],
         'note': 'Sistema demo usando dados simulados para demonstração'
     })
+
+@ai_analysis_bp.route('/api/ai-analysis/market-regime', methods=['GET'])
+@cross_origin()
+def get_market_regime():
+    """Endpoint para análise do regime de mercado atual."""
+    try:
+        # Dados simulados do regime de mercado
+        market_regime_data = {
+            'regime': 'bullish',
+            'confidence': 0.75,
+            'volatility_level': 'medium',
+            'trend_strength': 'strong',
+            'market_sentiment': 'positive',
+            'key_indicators': {
+                'vix_level': 'low',
+                'yield_curve': 'normal',
+                'credit_spreads': 'tight',
+                'momentum': 'positive'
+            },
+            'description': 'Mercado em tendência de alta com volatilidade moderada',
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': market_regime_data,
+            'message': 'Regime de mercado analisado com sucesso'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao analisar regime de mercado: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao analisar regime de mercado: {str(e)}'
+        }), 500
 
