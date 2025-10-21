@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "name": "Usuario Teste",
+    "email": "test@example.com",
+    "risk_profile": "moderado",
+    "created_at": "2025-10-12T23:06:59.709192",
+    "password": "pbkdf2:sha256:600000$HbGvonTZm4LboL2S$e21dce7d716a50d0207e3edda6742cd5d4880dc445da83eed1cdf5f5b542a44c"
+  }
+]

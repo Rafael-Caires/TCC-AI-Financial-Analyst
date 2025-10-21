@@ -38,7 +38,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Cell
+  Cell,
+  ResponsiveContainer
 } from 'recharts'
 import {
   TrendingUp as TrendingUpIcon,
@@ -66,6 +67,7 @@ import {
 const AIAnalysis = () => {
   // Estados
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const [analysisData, setAnalysisData] = useState(null)
   const [recommendations, setRecommendations] = useState(null)
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null)
@@ -97,21 +99,29 @@ const AIAnalysis = () => {
   // Carregamento dos dados
   const loadAnalysis = async () => {
     setLoading(true)
+    setError(null)
     try {
+      console.log('Carregando análise para:', selectedStock)
       const response = await fetch(`http://localhost:5000/api/ai-analysis/complete/${selectedStock}`)
-      const result = await response.json()
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const result = await response.json()
       console.log('Resposta da API:', result)
       
-      if (result.success) {
+      if (result.success && result.data) {
         console.log('Dados recebidos:', result.data)
         setAnalysisData(result.data)
         await loadMarketRegime()
       } else {
-        console.log('API retornou success: false')
+        console.error('API retornou dados inválidos:', result)
+        throw new Error(result.error || 'Dados inválidos recebidos da API')
       }
     } catch (error) {
       console.error('Erro ao carregar análise:', error)
+      setError(`Erro ao carregar análise: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -119,11 +129,20 @@ const AIAnalysis = () => {
 
   const loadMarketRegime = async () => {
     try {
+      console.log('Carregando regime de mercado...')
       const response = await fetch('http://localhost:5000/api/ai-analysis/market-regime')
-      const result = await response.json()
       
-      if (result.success) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('Regime de mercado:', result)
+      
+      if (result.success && result.data) {
         setMarketRegime(result.data)
+      } else {
+        console.error('Erro no regime de mercado:', result)
       }
     } catch (error) {
       console.error('Erro ao carregar regime de mercado:', error)
@@ -133,30 +152,52 @@ const AIAnalysis = () => {
   const loadRecommendations = async () => {
     setLoading(true)
     try {
+      console.log('Carregando recomendações...')
       const response = await fetch('http://localhost:5000/api/recommendations/advanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_profile: userProfile,
-          portfolio_value: portfolioValue,
+          portfolio_value: parseFloat(portfolioValue),
           num_recommendations: 12
         })
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const result = await response.json()
-      
       console.log('Resposta recomendações:', result)
       
-      if (result.success) {
+      if (result.success && result.data) {
         console.log('Recomendações recebidas:', result.data)
-        setRecommendations(result.data)
+        // Adapta a estrutura de dados das recomendações
+        const adaptedRecommendations = {
+          recommendations: result.data.hybrid_recommendations?.map(rec => ({
+            ticker: rec.ticker,
+            score: rec.hybrid_score / 10, // Converte para escala 0-1
+            expected_return: rec.potential_return / 100, // Converte para decimal
+            risk_level: rec.risk_score > 0.7 ? 'high' : rec.risk_score > 0.5 ? 'medium' : 'low',
+            reasoning: rec.reasons?.join(', ') || 'Análise técnica e fundamentalista',
+            sector: rec.sector
+          })) || [],
+          suggested_allocation: {
+            allocations: result.data.hybrid_recommendations?.slice(0, 6).map(rec => ({
+              ticker: rec.ticker,
+              weight: 1 / result.data.hybrid_recommendations.length // Distribuição igual
+            })) || []
+          }
+        }
+        
+        setRecommendations(adaptedRecommendations)
         
         // Carrega análise de risco do portfólio sugerido
-        if (result.data.suggested_allocation) {
-          loadPortfolioRiskAnalysis(result.data.suggested_allocation)
+        if (adaptedRecommendations.suggested_allocation) {
+          loadPortfolioRiskAnalysis(adaptedRecommendations.suggested_allocation)
         }
       } else {
-        console.log('API recomendações retornou success: false')
+        console.error('API recomendações retornou dados inválidos:', result)
       }
     } catch (error) {
       console.error('Erro ao carregar recomendações:', error)
@@ -263,7 +304,12 @@ const AIAnalysis = () => {
   useEffect(() => {
     loadAnalysis()
     loadRecommendations()
-  }, [])
+  }, [selectedStock]) // Adicionada dependência do selectedStock
+
+  // Carrega recomendações quando perfil ou valor do portfólio mudam
+  useEffect(() => {
+    loadRecommendations()
+  }, [userProfile, portfolioValue])
 
   return (
     <div className="space-y-6">
@@ -351,6 +397,17 @@ const AIAnalysis = () => {
             </Alert>
           ))}
         </div>
+      )}
+
+      {/* Alerta de erro */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Loading State */}
@@ -445,19 +502,21 @@ const AIAnalysis = () => {
             </CardHeader>
             <CardContent>
               {chartData?.radarData && (
-                <RadarChart width={250} height={200} data={chartData.radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} />
-                  <Radar
-                    name="Score"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.3}
-                    strokeWidth={2}
-                  />
-                </RadarChart>
+                <ResponsiveContainer width="100%" height={200}>
+                  <RadarChart data={chartData.radarData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
+                    <PolarRadiusAxis domain={[0, 100]} tick={false} />
+                    <Radar
+                      name="Score"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               )}
             </CardContent>
           </Card>
@@ -472,26 +531,28 @@ const AIAnalysis = () => {
             </CardHeader>
             <CardContent>
               {chartData?.historicalData && (
-                <AreaChart width={600} height={300} data={chartData.historicalData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value, name) => [
-                      `R$ ${value?.toFixed(2)}`,
-                      name === 'price' ? 'Preço' : name === 'sma20' ? 'SMA 20' : 'SMA 50'
-                    ]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="price"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.3}
-                  />
-                  <Line type="monotone" dataKey="sma20" stroke="#8884d8" strokeDasharray="3 3" />
-                  <Line type="monotone" dataKey="sma50" stroke="#82ca9d" strokeDasharray="3 3" />
-                </AreaChart>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData.historicalData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value, name) => [
+                        `R$ ${value?.toFixed(2)}`,
+                        name === 'price' ? 'Preço' : name === 'sma20' ? 'SMA 20' : 'SMA 50'
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="price"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.3}
+                    />
+                    <Line type="monotone" dataKey="sma20" stroke="#8884d8" strokeDasharray="3 3" />
+                    <Line type="monotone" dataKey="sma50" stroke="#82ca9d" strokeDasharray="3 3" />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
             </CardContent>
           </Card>
@@ -506,20 +567,22 @@ const AIAnalysis = () => {
             </CardHeader>
             <CardContent>
               {chartData?.predictionData && chartData.predictionData.length > 0 ? (
-                <LineChart width={250} height={200} data={chartData.predictionData.slice(0, 5)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value, name) => [
-                      `R$ ${value?.toFixed(2)}`,
-                      name === 'predicted' ? 'Previsto' : name === 'lower' ? 'Limite Inf.' : 'Limite Sup.'
-                    ]}
-                  />
-                  <Line type="monotone" dataKey="predicted" stroke="hsl(var(--primary))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="lower" stroke="#8884d8" strokeDasharray="2 2" />
-                  <Line type="monotone" dataKey="upper" stroke="#82ca9d" strokeDasharray="2 2" />
-                </LineChart>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={chartData.predictionData.slice(0, 5)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value, name) => [
+                        `R$ ${value?.toFixed(2)}`,
+                        name === 'predicted' ? 'Previsto' : name === 'lower' ? 'Limite Inf.' : 'Limite Sup.'
+                      ]}
+                    />
+                    <Line type="monotone" dataKey="predicted" stroke="hsl(var(--primary))" strokeWidth={2} />
+                    <Line type="monotone" dataKey="lower" stroke="#8884d8" strokeDasharray="2 2" />
+                    <Line type="monotone" dataKey="upper" stroke="#82ca9d" strokeDasharray="2 2" />
+                  </LineChart>
+                </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-[200px] text-muted-foreground">
                   <Brain className="h-8 w-8 mr-2" />
@@ -656,20 +719,22 @@ const AIAnalysis = () => {
                   </CardHeader>
                   <CardContent>
                     {recommendations?.suggested_allocation?.allocations && (
-                      <PieChart width={300} height={200}>
-                        <Pie
-                          data={recommendations.suggested_allocation.allocations}
-                          dataKey="weight"
-                          nameKey="ticker"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          fill="hsl(var(--primary))"
-                        />
-                        <Tooltip
-                          formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Alocação']}
-                        />
-                      </PieChart>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie
+                            data={recommendations.suggested_allocation.allocations}
+                            dataKey="weight"
+                            nameKey="ticker"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="hsl(var(--primary))"
+                          />
+                          <Tooltip
+                            formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Alocação']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
                     )}
                   </CardContent>
                 </Card>

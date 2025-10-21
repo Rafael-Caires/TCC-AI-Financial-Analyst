@@ -767,47 +767,84 @@ def get_complete_analysis_by_ticker(ticker):
     Endpoint para análise completa de um ativo específico.
     """
     try:
-        # Análise específica do ativo com dados simulados
+        # Verifica se o ticker está na base
+        if ticker not in ai_service.brazilian_stocks:
+            return jsonify({
+                'success': False,
+                'error': f'Ticker {ticker} não encontrado na base de dados'
+            }), 400
+        
+        # Gera dados simulados
+        stock_data = ai_service.generate_simulated_data(ticker, period_days=730)
+        
+        # Executa todas as análises
+        predictions = ai_service.simple_lstm_prediction(stock_data, 30)
+        technical_indicators = ai_service.calculate_technical_indicators(stock_data)
+        sentiment_analysis = ai_service.analyze_sentiment(ticker)
+        risk_metrics = ai_service.calculate_risk_metrics(stock_data)
+        
+        # Gera dados históricos simplificados
+        historical_prices = stock_data['Close'].tail(30).tolist()
+        
+        # Gera resumo executivo
+        current_price = technical_indicators['current_price']
+        target_price_30d = predictions['predictions'][min(29, len(predictions['predictions'])-1)]['predicted_price']
+        expected_return = ((target_price_30d / current_price) - 1) * 100
+        
+        # Determina recomendação
+        recommendation = 'COMPRA' if expected_return > 5 and sentiment_analysis['sentiment_score'] > 0.6 else \
+                        'VENDA' if expected_return < -5 and sentiment_analysis['sentiment_score'] < 0.4 else 'NEUTRO'
+        
+        confidence = min(0.95, max(0.5, (abs(expected_return) / 10) * sentiment_analysis['sentiment_score']))
+        
+        # Estrutura de dados compatível com o frontend
         analysis_data = {
             'ticker': ticker,
-            'analysis_timestamp': datetime.now().isoformat(),
-            'technical_analysis': {
-                'trend': 'bullish',
-                'support_level': 30.50,
-                'resistance_level': 35.20,
-                'rsi': 65.4,
-                'macd_signal': 'buy',
-                'moving_averages': {
-                    'sma_20': 32.15,
-                    'sma_50': 31.80,
-                    'sma_200': 29.90
-                }
+            'current_price': current_price,
+            'historical_prices': historical_prices,
+            'technical_indicators': {
+                'rsi': technical_indicators['rsi'],
+                'macd': technical_indicators['macd'],
+                'macd_signal': technical_indicators['macd_signal'],
+                'sma_20': technical_indicators['sma_20'],
+                'sma_50': technical_indicators['sma_50'],
+                'sma_200': technical_indicators['sma_200'],
+                'bb_upper': technical_indicators['bb_upper'],
+                'bb_lower': technical_indicators['bb_lower'],
+                'volatility': technical_indicators['volatility']
             },
-            'fundamental_analysis': {
-                'pe_ratio': 8.5,
-                'dividend_yield': 0.08,
-                'roe': 0.15,
-                'debt_equity': 0.35,
-                'price_to_book': 1.2
+            'predictions': {
+                'predictions': predictions['predictions'],
+                'model_type': predictions['model_type'],
+                'trend_detected': predictions['trend_detected']
             },
             'sentiment_analysis': {
-                'overall_sentiment': 'positive',
-                'news_sentiment': 0.65,
-                'social_sentiment': 0.72,
-                'analyst_consensus': 'buy'
-            },
-            'ml_predictions': {
-                'price_target_7d': 34.20,
-                'price_target_30d': 36.50,
-                'confidence': 0.78,
-                'volatility_forecast': 0.25
+                'sentiment_score': sentiment_analysis['sentiment_score'],
+                'sentiment_label': sentiment_analysis['sentiment_label'],
+                'confidence': sentiment_analysis['confidence']
             },
             'risk_metrics': {
-                'var_95': -0.045,
-                'beta': 1.15,
-                'sharpe_ratio': 0.85,
-                'max_drawdown': -0.12
-            }
+                'var_95': risk_metrics['var_95'] / 100,  # Convertendo para decimal
+                'cvar_95': risk_metrics['cvar_95'] / 100,
+                'volatility': risk_metrics['volatility'] / 100,
+                'sharpe_ratio': risk_metrics['sharpe_ratio'],
+                'max_drawdown': risk_metrics['max_drawdown'] / 100,
+                'beta': risk_metrics['beta']
+            },
+            'executive_summary': {
+                'ticker': ticker,
+                'recommendation': recommendation,
+                'confidence': confidence,
+                'current_price': current_price,
+                'target_price_30d': target_price_30d,
+                'expected_return_30d': expected_return,
+                'sentiment': sentiment_analysis['sentiment_label'],
+                'summary': f'Análise baseada em múltiplos modelos de machine learning. '
+                          f'RSI em {technical_indicators["rsi"]:.1f}, '
+                          f'sentimento {sentiment_analysis["sentiment_label"].lower()}, '
+                          f'expectativa de retorno em 30 dias: {expected_return:.1f}%.'
+            },
+            'analysis_timestamp': datetime.now().isoformat()
         }
         
         return jsonify({
@@ -817,6 +854,7 @@ def get_complete_analysis_by_ticker(ticker):
         
     except Exception as e:
         logger.error(f"Erro na análise completa: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
             'error': str(e)
