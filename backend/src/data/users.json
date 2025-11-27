@@ -6,5 +6,29 @@
     "risk_profile": "moderado",
     "created_at": "2025-10-12T23:06:59.709192",
     "password": "pbkdf2:sha256:600000$HbGvonTZm4LboL2S$e21dce7d716a50d0207e3edda6742cd5d4880dc445da83eed1cdf5f5b542a44c"
+  },
+  {
+    "id": 2,
+    "name": "\\dsaasdas",
+    "email": "dasd2@gmai.com",
+    "risk_profile": "moderado",
+    "created_at": "2025-10-28T14:29:39.181926",
+    "password": "pbkdf2:sha256:600000$8UvEzhSFFgSCckn4$14c18c6f2d38a33436798e9f252ec7747c648529c839609c3b7e04531909336a"
+  },
+  {
+    "id": 3,
+    "name": "rafael",
+    "email": "rafaelasdja321d@gamail.com",
+    "risk_profile": "conservador",
+    "created_at": "2025-10-28T14:30:17.588599",
+    "password": "pbkdf2:sha256:600000$krlDgS2Zy5hX2WYD$a61b761af718e80476fb7a5b8240b3aba31e709902acd0f6221943fc16c965ec"
+  },
+  {
+    "id": 4,
+    "name": "Rafael Caires",
+    "email": "rafael123@gmail.com",
+    "risk_profile": "moderado",
+    "created_at": "2025-10-28T22:44:25.498897",
+    "password": "pbkdf2:sha256:600000$hI4y4rfwDzgg2KDd$ce3c71339451e0506da93c234a5f4c7ae548c04b97e5109cb451e2493faab23f"
   }
 ]
